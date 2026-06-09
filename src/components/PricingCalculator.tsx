@@ -1,455 +1,432 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Sparkles,
-  Zap,
-  ChevronRight,
-  Info,
-  Check,
-  BarChart3,
-  Video,
-  Megaphone,
-  RotateCcw,
-  Car,
-} from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
-import { Separator } from "@/components/ui/separator";
-import {
-  PLANS,
-  ADD_ONS,
-  calculatePricing,
-  getAIInsight,
-  type PricingState,
-  type PlanTier,
-} from "@/lib/pricing";
-import { cn } from "@/lib/utils";
+import { useState, useMemo, useCallback } from "react";
 
-const ADDON_ICONS: Record<string, React.ReactNode> = {
-  "smartmatch-new": <Car className="w-4 h-4" />,
-  "smartmatch-old": <Car className="w-4 h-4" />,
-  smartcampaigns: <Megaphone className="w-4 h-4" />,
-  "360-spin": <RotateCcw className="w-4 h-4" />,
-  "video-studio": <Video className="w-4 h-4" />,
-};
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+const VINS = [50, 100, 200, 300, 400] as const;
+type VinTier = (typeof VINS)[number];
+type Plan = "lite" | "pro";
+
+const PRICING = {
+  base: {
+    lite: { 50: 199, 100: 349, 200: 599, 300: 749, 400: 799 },
+    pro:  { 50: 499, 100: 849, 200: 1499, 300: 1899, 400: 1999 },
+  },
+  smNew: { 50: 149, 100: 299, 200: 374, 300: 374, 400: 374 },
+  smOld: { 50: 149, 100: 299, 200: 374, 300: 374, 400: 374 },
+  sc:    { 50: 374, 100: 524, 200: 749, 300: 974, 400: 1199 },
+} as const;
+
+const PER_VIN = {
+  base: {
+    lite: { 50: 3.98, 100: 3.49, 200: 3.0,  300: 2.5,  400: 2.0  },
+    pro:  { 50: 9.98, 100: 8.49, 200: 7.5,  300: 6.33, 400: 5.0  },
+  },
+  smNew: { 50: 2.97, 100: 2.99, 200: 1.88, 300: 1.25, 400: 0.93 },
+  smOld: { 50: 2.97, 100: 2.99, 200: 1.88, 300: 1.25, 400: 0.93 },
+  sc:    { 50: 7.47, 100: 5.24, 200: 3.75, 300: 3.24, 400: 3.0  },
+} as const;
+
+function fmt(n: number) {
+  return "$" + n.toLocaleString("en-US");
+}
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function PricingCalculator() {
-  const [state, setState] = useState<PricingState>({
-    plan: "studio-lite",
-    vins: 50,
-    addOns: new Set(),
-  });
-  const [annual, setAnnual] = useState(false);
+  const [vins, setVins]   = useState<VinTier>(50);
+  const [plan, setPlan]   = useState<Plan>("lite");
+  const [sm, setSm]       = useState(false);
+  const [sc, setSc]       = useState(false);
+  const [smOpen, setSmOpen] = useState(false);
+  const [scOpen, setScOpen] = useState(false);
 
-  const pricing = useMemo(() => calculatePricing(state), [state]);
-  const insight = useMemo(() => getAIInsight(state), [state]);
+  const bp    = PRICING.base[plan][vins];
+  const bpv   = PER_VIN.base[plan][vins];
+  const smTotal = sm ? PRICING.smNew[vins] + PRICING.smOld[vins] : 0;
+  const scTotal = sc ? PRICING.sc[vins] : 0;
+  const total   = bp + smTotal + scTotal;
+  const blended = (total / vins).toFixed(2);
 
-  const toggleAddOn = (id: string) => {
-    setState((prev) => {
-      const next = new Set(prev.addOns);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return { ...prev, addOns: next };
-    });
+  const selectCell = useCallback((v: VinTier, p: Plan) => {
+    setVins(v); setPlan(p);
+  }, []);
+
+  const toggleSm = (checked: boolean) => {
+    setSm(checked);
+    if (!checked) setSmOpen(false);
   };
 
-  const displayMonthly = annual ? pricing.monthlyTotal * 0.833 : pricing.monthlyTotal;
+  const toggleSc = (checked: boolean) => {
+    setSc(checked);
+    if (!checked) setScOpen(false);
+  };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
-      {/* Ambient background */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-violet-900/20 blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-900/20 blur-[120px]" />
-        <div className="absolute top-[40%] left-[50%] w-[400px] h-[400px] rounded-full bg-purple-900/10 blur-[100px]" />
-      </div>
+    <>
+      <style>{`
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+        .pc-wrap {
+          font-family: 'DM Sans', sans-serif;
+          background: #f8f7f4;
+          color: #1a1a1a;
+          min-height: 100vh;
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+          padding: 2rem 1rem;
+        }
+        .pc-page { width: 100%; max-width: 640px; }
+        .pc-header { margin-bottom: 2rem; }
+        .pc-header h1 { font-size: 26px; font-weight: 600; margin-bottom: 4px; }
+        .pc-header p  { font-size: 14px; color: #555; }
+        .pc-section { margin-bottom: 1.75rem; }
+        .pc-step-label {
+          font-size: 11px; font-weight: 600; color: #999;
+          letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px;
+        }
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-16">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-16"
-        >
-          <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-full px-4 py-1.5 mb-6">
-            <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-            <span className="text-sm text-violet-300 font-medium">AI-Powered Pricing</span>
+        /* Plan table */
+        .pc-table {
+          width: 100%; border-collapse: collapse; background: #fff;
+          border-radius: 14px; overflow: hidden; border: 1px solid rgba(0,0,0,0.10);
+        }
+        .pc-table th {
+          padding: 10px 16px; font-size: 12px; font-weight: 600; color: #999;
+          text-transform: uppercase; letter-spacing: 0.06em; text-align: center;
+          background: #f1f0ed; border-bottom: 1px solid rgba(0,0,0,0.10);
+        }
+        .pc-table th:first-child { text-align: left; width: 110px; }
+        .pc-table td { padding: 0; border-bottom: 1px solid rgba(0,0,0,0.10); text-align: center; }
+        .pc-table tr:last-child td { border-bottom: none; }
+        .pc-table td:first-child {
+          padding: 12px 16px; font-size: 13px; font-weight: 600; color: #555;
+          text-align: left; background: #f1f0ed; border-right: 1px solid rgba(0,0,0,0.10);
+        }
+        .pc-col-divider { border-left: 1px solid rgba(0,0,0,0.10); }
+
+        .pc-cell {
+          display: block; width: 100%; padding: 12px 16px; cursor: pointer;
+          font-size: 13px; color: #555; transition: background 0.12s; text-align: center;
+          background: none; border: none; font-family: inherit; position: relative;
+        }
+        .pc-cell:hover { background: #e6f1fb; color: #0c447c; }
+        .pc-cell.selected { background: #e6f1fb; color: #0c447c; font-weight: 600; }
+        .pc-cell.selected::after {
+          content: '✓'; position: absolute; right: 10px; top: 50%;
+          transform: translateY(-50%); font-size: 12px; color: #185FA5;
+        }
+        .pc-cell-price { font-size: 13px; font-weight: 600; display: block; }
+
+        /* Mini addon table */
+        .pc-mini-table {
+          width: 100%; border-collapse: collapse; font-size: 12px;
+          border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,0,0,0.10);
+        }
+        .pc-mini-table th {
+          padding: 6px 10px; font-size: 11px; font-weight: 600; color: #999;
+          text-transform: uppercase; letter-spacing: 0.05em; text-align: center;
+          background: #f1f0ed; border-bottom: 1px solid rgba(0,0,0,0.10);
+        }
+        .pc-mini-table th:first-child { text-align: left; width: 80px; }
+        .pc-mini-table td {
+          padding: 7px 10px; border-bottom: 1px solid rgba(0,0,0,0.10);
+          text-align: center; color: #555; font-size: 12px;
+        }
+        .pc-mini-table tr:last-child td { border-bottom: none; }
+        .pc-mini-table td:first-child {
+          text-align: left; font-weight: 600;
+          background: #f1f0ed; border-right: 1px solid rgba(0,0,0,0.10);
+        }
+        .pc-mini-table td.active { background: #e6f1fb; color: #0c447c; font-weight: 600; }
+
+        /* Feature cards */
+        .pc-card {
+          background: #fff; border: 1px solid rgba(0,0,0,0.10);
+          border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 10px;
+        }
+        .pc-card.included { background: #eaf3de; border-color: rgba(59,109,17,0.25); }
+        .pc-card.active   { border: 2px solid #185FA5; }
+
+        .pc-card-header { display: flex; align-items: center; justify-content: space-between; }
+        .pc-card-name   { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; }
+        .pc-card-right  { display: flex; align-items: center; gap: 12px; }
+
+        .pc-badge {
+          font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px;
+        }
+        .pc-badge-included { background: #eaf3de; color: #3B6D11; border: 1px solid rgba(59,109,17,0.3); }
+        .pc-badge-addon    { background: #e6f1fb; color: #0c447c; border: 1px solid rgba(24,95,165,0.3); }
+
+        .pc-price { font-size: 14px; font-weight: 600; color: #0c447c; min-width: 70px; text-align: right; }
+        .pc-price.muted { color: #999; }
+
+        /* Toggle */
+        .pc-toggle { position: relative; width: 40px; height: 22px; cursor: pointer; flex-shrink: 0; }
+        .pc-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .pc-toggle-track {
+          position: absolute; inset: 0; border-radius: 20px;
+          background: #d0d0d0; transition: background 0.2s;
+        }
+        .pc-toggle input:checked ~ .pc-toggle-track { background: #185FA5; }
+        .pc-toggle-thumb {
+          position: absolute; left: 3px; top: 3px; width: 16px; height: 16px;
+          border-radius: 50%; background: white; transition: transform 0.2s;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.2); pointer-events: none;
+        }
+        .pc-toggle input:checked ~ .pc-toggle-track .pc-toggle-thumb { transform: translateX(18px); }
+
+        /* Expand section */
+        .pc-expand { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.10); }
+        .pc-expand.open { display: block; }
+        .pc-hint { font-size: 11px; color: #999; display: flex; align-items: center; gap: 4px; margin-bottom: 10px; }
+        .pc-expand-label { font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+
+        .pc-chevron { font-size: 13px; color: #999; transition: transform 0.2s; display: inline-block; }
+        .pc-chevron.open { transform: rotate(180deg); }
+
+        /* Summary */
+        .pc-summary {
+          background: #f1f0ed; border-radius: 14px; padding: 1.25rem; margin-bottom: 12px;
+        }
+        .pc-summary-title {
+          font-size: 12px; font-weight: 600; color: #999;
+          text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+        }
+        .pc-sum-row {
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 5px 0; font-size: 14px; color: #555;
+        }
+        .pc-sum-total {
+          display: flex; justify-content: space-between; align-items: center;
+          font-size: 20px; font-weight: 600; color: #1a1a1a;
+          border-top: 1px solid rgba(0,0,0,0.20); margin-top: 10px; padding-top: 12px;
+        }
+        .pc-pervin { font-size: 12px; color: #999; margin-top: 6px; text-align: right; }
+
+        @media (max-width: 480px) {
+          .pc-wrap { padding: 1rem 0.75rem; }
+          .pc-header h1 { font-size: 22px; }
+        }
+      `}</style>
+
+      <div className="pc-wrap">
+        <div className="pc-page">
+
+          {/* Header */}
+          <div className="pc-header">
+            <h1>Pricing Calculator</h1>
+            <p>Configure your plan and see real-time cost breakdown with AI-powered insights.</p>
           </div>
-          <h1 className="text-5xl font-bold tracking-tight mb-4 bg-gradient-to-br from-white via-white to-white/50 bg-clip-text text-transparent">
-            Configure your plan
-          </h1>
-          <p className="text-lg text-white/40 max-w-xl mx-auto">
-            Real-time cost breakdown with intelligent recommendations tailored to your dealership.
-          </p>
 
-          {/* Annual toggle */}
-          <div className="inline-flex items-center gap-3 mt-8 bg-white/5 rounded-full px-5 py-2.5 border border-white/10">
-            <span className={cn("text-sm", !annual ? "text-white" : "text-white/40")}>Monthly</span>
-            <Switch
-              checked={annual}
-              onCheckedChange={setAnnual}
-              className="data-[state=checked]:bg-violet-600"
-            />
-            <span className={cn("text-sm", annual ? "text-white" : "text-white/40")}>Annual</span>
-            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
-              Save 17%
-            </Badge>
-          </div>
-        </motion.div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
-          {/* Left column */}
-          <div className="space-y-4">
-
-            {/* Step 1 — VIN slider */}
-            <ConfigCard step={1} title="Monthly VIN volume">
-              <div className="space-y-5">
-                <div className="flex items-end justify-between">
-                  <div>
-                    <span className="text-4xl font-bold tabular-nums">{state.vins}</span>
-                    <span className="text-white/40 ml-2 text-sm">VINs / month</span>
-                  </div>
-                  <span className="text-sm text-white/40">
-                    ${pricing.plan.pricePerVin.toFixed(2)}{" "}
-                    <span className="text-white/30">per VIN</span>
-                  </span>
-                </div>
-                <Slider
-                  min={1}
-                  max={500}
-                  step={1}
-                  value={[state.vins]}
-                  onValueChange={(vals) =>
-                    setState((s) => ({ ...s, vins: (vals as number[])[0] }))
-                  }
-                  className="[&_[role=slider]]:bg-violet-500 [&_[role=slider]]:border-violet-400"
-                />
-                <div className="flex justify-between text-xs text-white/25">
-                  {[1, 100, 200, 300, 400, 500].map((n) => (
-                    <span key={n}>{n}</span>
-                  ))}
-                </div>
-              </div>
-            </ConfigCard>
-
-            {/* Step 2 — Plan selection as 3-col table */}
-            <ConfigCard step={2} title="Choose your plan">
-              <div className="overflow-hidden rounded-xl border border-white/10">
-                {/* Table header */}
-                <div className="grid grid-cols-4 bg-white/5 px-4 py-3 border-b border-white/10">
-                  <div className="text-xs font-semibold text-white/40 uppercase tracking-wider">Plan</div>
-                  <div className="text-xs font-semibold text-white/40 uppercase tracking-wider text-center">Max VINs</div>
-                  <div className="text-xs font-semibold text-white/40 uppercase tracking-wider text-center">Price / Rooftop</div>
-                  <div className="text-xs font-semibold text-white/40 uppercase tracking-wider text-center">Price / VIN</div>
-                </div>
-
-                {/* Plan rows */}
-                {PLANS.map((plan) => {
-                  const selected = state.plan === plan.id;
+          {/* Step 1 — Plan table */}
+          <div className="pc-section">
+            <div className="pc-step-label">Step 1 — Select Max VINs &amp; plan</div>
+            <table className="pc-table">
+              <thead>
+                <tr>
+                  <th>Max VINs</th>
+                  <th colSpan={2}>Studio Lite</th>
+                  <th colSpan={2} className="pc-col-divider">Studio Pro</th>
+                </tr>
+                <tr>
+                  <th></th>
+                  <th style={{ fontSize: 11, fontWeight: 500 }}>Price / Rooftop</th>
+                  <th style={{ fontSize: 11, fontWeight: 500 }}>Price / VIN</th>
+                  <th style={{ fontSize: 11, fontWeight: 500 }} className="pc-col-divider">Price / Rooftop</th>
+                  <th style={{ fontSize: 11, fontWeight: 500 }}>Price / VIN</th>
+                </tr>
+              </thead>
+              <tbody>
+                {VINS.map((v) => {
+                  const lSel = vins === v && plan === "lite";
+                  const pSel = vins === v && plan === "pro";
                   return (
-                    <motion.button
-                      key={plan.id}
-                      onClick={() => setState((s) => ({ ...s, plan: plan.id as PlanTier }))}
-                      whileHover={{ backgroundColor: "rgba(255,255,255,0.04)" }}
-                      className={cn(
-                        "w-full grid grid-cols-4 items-center px-4 py-4 transition-colors text-left border-b border-white/5 last:border-0",
-                        selected ? "bg-violet-900/30" : "bg-transparent"
-                      )}
-                    >
-                      {/* Plan name */}
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={cn(
-                            "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
-                            selected
-                              ? "border-violet-500 bg-violet-500"
-                              : "border-white/20 bg-transparent"
-                          )}
-                        >
-                          {selected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-sm">{plan.name}</span>
-                            {plan.recommended && (
-                              <Badge className="bg-violet-600/80 text-white border-0 text-[10px] px-1.5 py-0">
-                                Popular
-                              </Badge>
-                            )}
-                          </div>
-                          <span className="text-xs text-white/35">{plan.tagline}</span>
-                        </div>
-                      </div>
-
-                      {/* Max VINs */}
-                      <div className="text-center">
-                        <span className={cn("text-sm font-semibold", selected ? "text-violet-300" : "text-white/60")}>
-                          {plan.maxVins}
-                        </span>
-                      </div>
-
-                      {/* Price / Rooftop */}
-                      <div className="text-center">
-                        <span className={cn("text-sm font-semibold tabular-nums", selected ? "text-white" : "text-white/60")}>
-                          ${plan.pricePerRooftop}
-                          <span className="text-white/30 text-xs font-normal">/mo</span>
-                        </span>
-                      </div>
-
-                      {/* Price / VIN */}
-                      <div className="text-center">
-                        <span className={cn("text-sm font-semibold tabular-nums", selected ? "text-violet-300" : "text-white/60")}>
-                          ${plan.pricePerVin}
-                        </span>
-                      </div>
-                    </motion.button>
+                    <tr key={v}>
+                      <td>{v}</td>
+                      <td>
+                        <button className={`pc-cell${lSel ? " selected" : ""}`} onClick={() => selectCell(v, "lite")}>
+                          <span className="pc-cell-price">{fmt(PRICING.base.lite[v])}</span>
+                        </button>
+                      </td>
+                      <td>
+                        <button className={`pc-cell${lSel ? " selected" : ""}`} onClick={() => selectCell(v, "lite")}>
+                          <span className="pc-cell-price">${PER_VIN.base.lite[v].toFixed(2)}</span>
+                        </button>
+                      </td>
+                      <td className="pc-col-divider">
+                        <button className={`pc-cell${pSel ? " selected" : ""}`} onClick={() => selectCell(v, "pro")}>
+                          <span className="pc-cell-price">{fmt(PRICING.base.pro[v])}</span>
+                        </button>
+                      </td>
+                      <td>
+                        <button className={`pc-cell${pSel ? " selected" : ""}`} onClick={() => selectCell(v, "pro")}>
+                          <span className="pc-cell-price">${PER_VIN.base.pro[v].toFixed(2)}</span>
+                        </button>
+                      </td>
+                    </tr>
                   );
                 })}
-              </div>
-            </ConfigCard>
-
-            {/* Step 3 — Add-ons */}
-            <ConfigCard step={3} title="Add-ons & Features">
-              <div className="space-y-2">
-                {ADD_ONS.map((addon) => {
-                  const active = state.addOns.has(addon.id);
-                  return (
-                    <motion.div
-                      key={addon.id}
-                      layout
-                      className={cn(
-                        "flex items-center justify-between p-3.5 rounded-xl border transition-all",
-                        active
-                          ? "bg-violet-900/30 border-violet-500/40"
-                          : "bg-white/5 border-white/10 hover:border-white/20"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={cn(
-                            "w-8 h-8 rounded-lg flex items-center justify-center",
-                            active ? "bg-violet-500/20 text-violet-400" : "bg-white/5 text-white/30"
-                          )}
-                        >
-                          {ADDON_ICONS[addon.id]}
-                        </div>
-                        <div>
-                          <span className="text-sm font-medium">{addon.name}</span>
-                          <p className="text-xs text-white/40">{addon.description}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold tabular-nums text-white/60">
-                          ${addon.pricePerMonth}<span className="text-white/30 text-xs font-normal">/mo</span>
-                        </span>
-                        <Switch
-                          checked={active}
-                          onCheckedChange={() => toggleAddOn(addon.id)}
-                          className="data-[state=checked]:bg-violet-600"
-                        />
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </ConfigCard>
+              </tbody>
+            </table>
           </div>
 
-          {/* Right column — summary */}
-          <div className="space-y-4 lg:sticky lg:top-6 self-start">
-            {/* AI Insight */}
-            <motion.div
-              layout
-              className="relative overflow-hidden rounded-2xl border border-violet-500/30 bg-gradient-to-br from-violet-900/40 to-purple-900/20 p-5"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent" />
-              <div className="relative">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-violet-500/30 flex items-center justify-center">
-                    <Sparkles className="w-3.5 h-3.5 text-violet-300" />
-                  </div>
-                  <span className="text-sm font-medium text-violet-300">AI Insight</span>
+          {/* Step 2 — Features */}
+          <div className="pc-section">
+            <div className="pc-step-label">Step 2 — Features</div>
+
+            {/* Base plan */}
+            <div className="pc-card included">
+              <div className="pc-card-header">
+                <div className="pc-card-name">
+                  <i className="ti ti-layout-grid" style={{ fontSize: 18, color: "#3B6D11" }} />
+                  Base Plan
+                  <span className="pc-badge pc-badge-included">Always included</span>
                 </div>
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={insight}
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    className="text-sm text-white/70 leading-relaxed"
-                  >
-                    {insight}
-                  </motion.p>
-                </AnimatePresence>
+                <div className="pc-price">{fmt(bp)}</div>
               </div>
-            </motion.div>
-
-            {/* Cost breakdown */}
-            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-5 space-y-4">
-              <h3 className="font-semibold text-sm text-white/60 uppercase tracking-wider">
-                Cost Breakdown
-              </h3>
-
-              {/* Big number */}
-              <div className="text-center py-4">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={Math.round(displayMonthly)}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 1.05 }}
-                  >
-                    <span className="text-5xl font-bold tabular-nums">
-                      ${Math.round(displayMonthly).toLocaleString()}
-                    </span>
-                    <span className="text-white/40 text-sm">/mo</span>
-                  </motion.div>
-                </AnimatePresence>
-                {annual && (
-                  <p className="text-sm text-white/40 mt-1">
-                    ${Math.round(displayMonthly * 12).toLocaleString()} billed annually
-                  </p>
-                )}
+              <div style={{ fontSize: 12, color: "#999", marginTop: 4 }}>
+                ${bpv.toFixed(2)} per VIN
               </div>
-
-              <Separator className="bg-white/10" />
-
-              {/* Line items */}
-              <div className="space-y-2.5">
-                <LineItem
-                  label={`${pricing.plan.name} (rooftop)`}
-                  value={`$${pricing.basePlan}`}
-                />
-                <LineItem
-                  label={`${state.vins} VINs × $${pricing.plan.pricePerVin}`}
-                  value={`$${Math.round(pricing.vinCost)}`}
-                />
-                {pricing.addOnBreakdown.map((item) => (
-                  <LineItem key={item.name} label={item.name} value={`$${item.price}`} />
-                ))}
-                {annual && (
-                  <LineItem
-                    label="Annual discount (2 months free)"
-                    value={`-$${Math.round(pricing.monthlyTotal * 2)}`}
-                    highlight
-                  />
-                )}
-              </div>
-
-              <Separator className="bg-white/10" />
-
-              {/* Metrics */}
-              <div className="grid grid-cols-2 gap-3">
-                <MetricBox
-                  icon={<BarChart3 className="w-3.5 h-3.5" />}
-                  label="Blended / VIN"
-                  value={`$${pricing.blendedPerVin.toFixed(2)}`}
-                />
-                <MetricBox
-                  icon={<Zap className="w-3.5 h-3.5" />}
-                  label="Annual total"
-                  value={`$${Math.round(displayMonthly * 12 / 1000)}k`}
-                />
-              </div>
-
-              <button className="w-full py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 font-semibold text-sm transition-all shadow-lg shadow-violet-500/25 flex items-center justify-center gap-2 group">
-                Get Started
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-
-              <p className="text-center text-xs text-white/30">
-                No credit card required · Cancel anytime
-              </p>
             </div>
 
-            {/* Included features */}
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Info className="w-3.5 h-3.5 text-white/30" />
-                <span className="text-xs text-white/40 font-medium">
-                  What&apos;s included in {pricing.plan.name}
-                </span>
-              </div>
-              <div className="space-y-2">
-                {pricing.plan.features.map((f) => (
-                  <div key={f} className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-violet-400 shrink-0" />
-                    <span className="text-xs text-white/50">{f}</span>
+            {/* SmartMatch */}
+            <div className={`pc-card${sm ? " active" : ""}`}>
+              <div
+                className="pc-card-header"
+                onClick={() => sm && setSmOpen((o) => !o)}
+                style={{ cursor: sm ? "pointer" : "default" }}
+              >
+                <div className="pc-card-name">
+                  <i className="ti ti-brain" style={{ fontSize: 18, color: sm ? "#185FA5" : "#999" }} />
+                  SmartMatch
+                  <span className="pc-badge pc-badge-addon">Add-on</span>
+                  {sm && <span className={`pc-chevron${smOpen ? " open" : ""}`}>▾</span>}
+                </div>
+                <div className="pc-card-right">
+                  <div className={`pc-price${sm ? "" : " muted"}`}>
+                    {sm ? fmt(smTotal) : "$0"}
                   </div>
-                ))}
+                  <label className="pc-toggle" onClick={(e) => e.stopPropagation()}>
+                    <input type="checkbox" checked={sm} onChange={(e) => toggleSm(e.target.checked)} />
+                    <div className="pc-toggle-track"><div className="pc-toggle-thumb" /></div>
+                  </label>
+                </div>
+              </div>
+              <div className={`pc-expand${smOpen ? " open" : ""}`}>
+                <div className="pc-hint">
+                  <i className="ti ti-table" style={{ fontSize: 14 }} /> All-tier pricing
+                </div>
+                <div className="pc-expand-label">SmartMatch — New + Pre-owned</div>
+                <AddonTable pricing={PRICING.smNew} perVin={PER_VIN.smNew} activeVin={vins} combine={PRICING.smOld} combinePerVin={PER_VIN.smOld} />
+              </div>
+            </div>
+
+            {/* SmartCampaigns */}
+            <div className={`pc-card${sc ? " active" : ""}`}>
+              <div
+                className="pc-card-header"
+                onClick={() => sc && setScOpen((o) => !o)}
+                style={{ cursor: sc ? "pointer" : "default" }}
+              >
+                <div className="pc-card-name">
+                  <i className="ti ti-speakerphone" style={{ fontSize: 18, color: sc ? "#185FA5" : "#999" }} />
+                  SmartCampaigns
+                  <span className="pc-badge pc-badge-addon">Add-on</span>
+                  {sc && <span className={`pc-chevron${scOpen ? " open" : ""}`}>▾</span>}
+                </div>
+                <div className="pc-card-right">
+                  <div className={`pc-price${sc ? "" : " muted"}`}>
+                    {sc ? fmt(scTotal) : "$0"}
+                  </div>
+                  <label className="pc-toggle" onClick={(e) => e.stopPropagation()}>
+                    <input type="checkbox" checked={sc} onChange={(e) => toggleSc(e.target.checked)} />
+                    <div className="pc-toggle-track"><div className="pc-toggle-thumb" /></div>
+                  </label>
+                </div>
+              </div>
+              <div className={`pc-expand${scOpen ? " open" : ""}`}>
+                <div className="pc-hint">
+                  <i className="ti ti-table" style={{ fontSize: 14 }} /> All-tier pricing
+                </div>
+                <AddonTable pricing={PRICING.sc} perVin={PER_VIN.sc} activeVin={vins} />
               </div>
             </div>
           </div>
+
+          {/* Cost breakdown */}
+          <div className="pc-section">
+            <div className="pc-summary">
+              <div className="pc-summary-title">Cost breakdown</div>
+              <div className="pc-sum-row"><span>Base plan</span><span>{fmt(bp)}</span></div>
+              {sm && (
+                <div className="pc-sum-row">
+                  <span>SmartMatch (New + Pre-owned)</span>
+                  <span>{fmt(smTotal)}</span>
+                </div>
+              )}
+              {sc && (
+                <div className="pc-sum-row">
+                  <span>SmartCampaigns</span>
+                  <span>{fmt(scTotal)}</span>
+                </div>
+              )}
+              <div className="pc-sum-total">
+                <span>Monthly total</span>
+                <span>{fmt(total)}</span>
+              </div>
+              <div className="pc-pervin">Blended: ${blended} per VIN</div>
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
-function ConfigCard({
-  step,
-  title,
-  children,
-}: {
-  step: number;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: step * 0.05 }}
-      className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-5"
-    >
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-6 h-6 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-xs font-bold text-violet-400">
-          {step}
-        </div>
-        <h2 className="font-semibold text-sm text-white/80">{title}</h2>
-      </div>
-      {children}
-    </motion.div>
-  );
-}
+// ─── Addon Table ─────────────────────────────────────────────────────────────
 
-function LineItem({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-white/50">{label}</span>
-      <span className={cn("text-sm font-medium tabular-nums", highlight ? "text-emerald-400" : "text-white/80")}>
-        {value}
-      </span>
-    </div>
-  );
-}
+type TierPricing = Record<number, number>;
 
-function MetricBox({
-  icon,
-  label,
-  value,
+function AddonTable({
+  pricing,
+  perVin,
+  activeVin,
+  combine,
+  combinePerVin,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
+  pricing: TierPricing;
+  perVin: TierPricing;
+  activeVin: number;
+  combine?: TierPricing;
+  combinePerVin?: TierPricing;
 }) {
   return (
-    <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-      <div className="flex items-center gap-1.5 text-white/30 mb-1">
-        {icon}
-        <span className="text-xs">{label}</span>
-      </div>
-      <span className="text-lg font-bold tabular-nums">{value}</span>
-    </div>
+    <table className="pc-mini-table">
+      <thead>
+        <tr>
+          <th>Max VINs</th>
+          <th>Price / Rooftop</th>
+          <th>Price / VIN</th>
+        </tr>
+      </thead>
+      <tbody>
+        {VINS.map((v) => {
+          const price  = combine ? pricing[v] + combine[v] : pricing[v];
+          const pv     = combinePerVin ? perVin[v] + combinePerVin[v] : perVin[v];
+          const active = v === activeVin;
+          return (
+            <tr key={v}>
+              <td>{v}</td>
+              <td className={active ? "active" : ""}>${price}</td>
+              <td className={active ? "active" : ""}>${pv.toFixed(2)}</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }

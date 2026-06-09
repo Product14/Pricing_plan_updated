@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import PricingCalculator from "@/components/PricingCalculator";
 
 export default function Home() {
-  redirect("/calculator.html");
+  return <PricingCalculator />;
 }
