@@ -292,7 +292,7 @@ export default function PricingCalculator() {
               </div>
             </div>
 
-            {/* SmartMatch */}
+            {/* Studio Instant */}
             <div className={`pc-card${sm ? " active" : ""}`}>
               <div
                 className="pc-card-header"
@@ -301,7 +301,7 @@ export default function PricingCalculator() {
               >
                 <div className="pc-card-name">
                   <i className="ti ti-brain" style={{ fontSize: 18, color: sm ? "#185FA5" : "#999" }} />
-                  SmartMatch
+                  Studio Instant
                   <span className="pc-badge pc-badge-addon">Add-on</span>
                   {sm && <span className={`pc-chevron${smOpen ? " open" : ""}`}>▾</span>}
                 </div>
@@ -319,12 +319,12 @@ export default function PricingCalculator() {
                 <div className="pc-hint">
                   <i className="ti ti-table" style={{ fontSize: 14 }} /> All-tier pricing
                 </div>
-                <div className="pc-expand-label">SmartMatch — New + Pre-owned</div>
+                <div className="pc-expand-label">Studio Instant — New + Pre-owned</div>
                 <AddonTable pricing={PRICING.smNew} perVin={PER_VIN.smNew} activeVin={vins} combine={PRICING.smOld} combinePerVin={PER_VIN.smOld} />
               </div>
             </div>
 
-            {/* SmartCampaigns */}
+            {/* Studio Promote */}
             <div className={`pc-card${sc ? " active" : ""}`}>
               <div
                 className="pc-card-header"
@@ -333,7 +333,7 @@ export default function PricingCalculator() {
               >
                 <div className="pc-card-name">
                   <i className="ti ti-speakerphone" style={{ fontSize: 18, color: sc ? "#185FA5" : "#999" }} />
-                  SmartCampaigns
+                  Studio Promote
                   <span className="pc-badge pc-badge-addon">Add-on</span>
                   {sc && <span className={`pc-chevron${scOpen ? " open" : ""}`}>▾</span>}
                 </div>
@@ -363,13 +363,13 @@ export default function PricingCalculator() {
               <div className="pc-sum-row"><span>Base plan</span><span>{fmt(bp)}</span></div>
               {sm && (
                 <div className="pc-sum-row">
-                  <span>SmartMatch (New + Pre-owned)</span>
+                  <span>Studio Instant (New + Pre-owned)</span>
                   <span>{fmt(smTotal)}</span>
                 </div>
               )}
               {sc && (
                 <div className="pc-sum-row">
-                  <span>SmartCampaigns</span>
+                  <span>Studio Promote</span>
                   <span>{fmt(scTotal)}</span>
                 </div>
               )}

@@ -310,12 +310,12 @@
       <div style="font-size:12px;color:var(--text-3);margin-top:4px" id="base-pervin">$3.98 per VIN</div>
     </div>
 
-    <!-- SmartMatch — add-on -->
+    <!-- Studio Instant — add-on -->
     <div class="feature-card" id="fc-sm">
       <div class="feature-header" onclick="toggleSmTables()" style="cursor:pointer" title="Click to view pricing tables">
         <div class="feature-name">
           <i class="ti ti-brain" style="font-size:18px;color:var(--text-3)" id="sm-icon"></i>
-          SmartMatch
+          Studio Instant
           <span class="badge badge-addon">Add-on</span>
           <i class="ti ti-chevron-down expand-chevron" id="sm-chevron"></i>
         </div>
@@ -330,18 +330,18 @@
       <div class="sm-tables-wrap" id="sm-tables">
         <div class="dbl-hint" style="margin-bottom:10px"><i class="ti ti-table" style="font-size:14px"></i> All-tier pricing</div>
         <div class="sm-table-section">
-          <div class="sm-table-label">SmartMatch — New + Pre-owned</div>
+          <div class="sm-table-label">Studio Instant — New + Pre-owned</div>
           <table class="sm-mini-table" id="sm-combined-table"></table>
         </div>
       </div>
     </div>
 
-    <!-- SmartCampaigns — add-on -->
+    <!-- Studio Promote — add-on -->
     <div class="feature-card" id="fc-sc">
       <div class="feature-header" onclick="toggleScTable()" style="cursor:pointer" title="Click to view pricing table">
         <div class="feature-name">
           <i class="ti ti-speakerphone" style="font-size:18px;color:var(--text-3)" id="sc-icon"></i>
-          SmartCampaigns
+          Studio Promote
           <span class="badge badge-addon">Add-on</span>
           <i class="ti ti-chevron-down expand-chevron" id="sc-chevron"></i>
         </div>
@@ -367,8 +367,8 @@
     <div class="summary-card">
       <div class="summary-title">Cost breakdown</div>
       <div class="summary-row"><span>Base plan</span><span id="sum-base">$199</span></div>
-      <div class="summary-row" id="sum-sm-row" style="display:none"><span id="sum-sm-label">SmartMatch</span><span id="sum-sm">—</span></div>
-      <div class="summary-row" id="sum-sc-row" style="display:none"><span>SmartCampaigns</span><span id="sum-sc">—</span></div>
+      <div class="summary-row" id="sum-sm-row" style="display:none"><span id="sum-sm-label">Studio Instant</span><span id="sum-sm">—</span></div>
+      <div class="summary-row" id="sum-sc-row" style="display:none"><span>Studio Promote</span><span id="sum-sc">—</span></div>
       <div class="summary-total"><span>Monthly total</span><span id="sum-total">$199</span></div>
       <div class="pervin-note" id="sum-pervin">Blended: $3.98 per VIN</div>
     </div>
@@ -547,9 +547,9 @@ function render() {
   document.getElementById('sum-base').textContent = fmt(bp);
 
   const smLabel = (state.smn && state.smo)
-    ? 'SmartMatch (New + Pre-owned)'
-    : state.smn ? 'SmartMatch (New cars)'
-    : 'SmartMatch (Pre-owned cars)';
+    ? 'Studio Instant (New + Pre-owned)'
+    : state.smn ? 'Studio Instant (New cars)'
+    : 'Studio Instant (Pre-owned cars)';
   document.getElementById('sum-sm-row').style.display  = smTotal > 0 ? '' : 'none';
   document.getElementById('sum-sm-label').textContent  = smLabel;
   document.getElementById('sum-sm').textContent        = fmt(smTotal);
