@@ -636,14 +636,6 @@ export default function StudioOSCalculator() {
               </div>
 
               <div className="os-summary-body">
-                <div className="os-summary-row">
-                  <div className="os-summary-row-name">
-                    <div className="os-summary-dot" style={{ background: "#185FA5" }} />
-                    Base Plan
-                  </div>
-                  <div className="os-summary-row-price">{fmt(breakdown.base)}</div>
-                </div>
-
                 {breakdown.items.filter((i) => i.on).length === 0 && (
                   <div className="os-summary-row">
                     <div className="os-summary-row-name" style={{ color: "#9ca3af", fontStyle: "italic" }}>
