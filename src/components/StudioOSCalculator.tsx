@@ -144,7 +144,7 @@ export default function StudioOSCalculator() {
 
         /* ── Header ── */
         .os-header {
-          max-width: 1100px;
+          max-width: 1200px;
           margin: 0 auto 32px;
         }
         .os-eyebrow {
@@ -169,7 +169,7 @@ export default function StudioOSCalculator() {
 
         /* ── Config bar ── */
         .os-config {
-          max-width: 1100px;
+          max-width: 1200px;
           margin: 0 auto 28px;
           background: #fff;
           border: 1px solid #e5e2dc;
@@ -254,11 +254,23 @@ export default function StudioOSCalculator() {
           margin-top: 2px;
         }
 
-        /* ── Base plan row ── */
-        .os-section {
-          max-width: 1100px;
-          margin: 0 auto 16px;
+        /* ── Two-column body ── */
+        .os-body {
+          max-width: 1200px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: 1fr 380px;
+          gap: 20px;
+          align-items: start;
         }
+        @media (max-width: 700px) {
+          .os-body { grid-template-columns: 1fr; }
+        }
+
+        .os-left { display: flex; flex-direction: column; gap: 16px; }
+        .os-right { position: sticky; top: 24px; }
+
+        /* ── Section label ── */
         .os-section-label {
           font-size: 11px;
           font-weight: 600;
@@ -267,6 +279,8 @@ export default function StudioOSCalculator() {
           color: #9ca3af;
           margin-bottom: 10px;
         }
+
+        /* ── Base plan row ── */
         .os-base-card {
           background: #fff;
           border: 1px solid #e5e2dc;
@@ -326,17 +340,9 @@ export default function StudioOSCalculator() {
 
         /* ── Product cards grid ── */
         .os-products {
-          max-width: 1100px;
-          margin: 0 auto 28px;
           display: grid;
-          grid-template-columns: repeat(5, 1fr);
+          grid-template-columns: repeat(2, 1fr);
           gap: 12px;
-        }
-        @media (max-width: 900px) {
-          .os-products { grid-template-columns: repeat(3, 1fr); }
-        }
-        @media (max-width: 600px) {
-          .os-products { grid-template-columns: repeat(2, 1fr); }
         }
 
         .os-product-card {
@@ -576,139 +582,134 @@ export default function StudioOSCalculator() {
             </select>
           </div>
 
-          {/* Total */}
-          <div className="os-total-pill">
-            <div className="os-total-label">Monthly Total</div>
-            <div className="os-total-value">{fmt(breakdown.total)}</div>
-            <div className="os-total-sub">
-              ${breakdown.blended.toFixed(2)} blended / VIN
-            </div>
-          </div>
         </div>
 
-        {/* Base Plan */}
-        <div className="os-section">
-          <div className="os-section-label">Base Plan — always included</div>
-          <div className="os-base-card">
-            <div className="os-base-icon">
-              <i className="ti ti-layout-grid" />
-            </div>
+        <div className="os-body">
+          {/* ── LEFT: products ── */}
+          <div className="os-left">
+            {/* Base Plan */}
             <div>
-              <div className="os-base-name">
-                Base Plan
-                <span className="os-base-tag">
-                  <i className="ti ti-check" style={{ fontSize: 10 }} />
-                  Always included
-                </span>
-              </div>
-              <div className="os-base-desc">
-                Core platform access · AI processing · Analytics dashboard ·{" "}
-                {plan === "pro" ? "Dedicated account manager" : "Email support"}
-              </div>
-            </div>
-            <div className="os-base-price">
-              <div className="os-base-price-val">{fmt(breakdown.base)}</div>
-              <div className="os-base-price-sub">
-                ${breakdown.basePerVin.toFixed(2)} / VIN
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Product cards */}
-        <div className="os-section">
-          <div className="os-section-label">Add-on products — toggle to include</div>
-        </div>
-        <div className="os-products">
-          {breakdown.items.map((p) => (
-            <div
-              key={p.id}
-              className={`os-product-card${p.on ? " enabled" : ""}`}
-              onClick={() => toggleProduct(p.id)}
-            >
-              <div className="os-product-top">
-                <div
-                  className="os-product-icon"
-                  style={{ background: p.color + "18", color: p.color }}
-                >
-                  <i className={`ti ${p.icon}`} />
+              <div className="os-section-label">Base Plan — always included</div>
+              <div className="os-base-card">
+                <div className="os-base-icon">
+                  <i className="ti ti-layout-grid" />
                 </div>
-                <div className={`os-toggle${p.on ? " on" : ""}`}>
-                  <div className="os-toggle-track" />
-                  <div className="os-toggle-thumb" />
-                </div>
-              </div>
-              <div>
-                <div className="os-product-name">{p.name}</div>
-                <div className="os-product-desc">{p.tagline}</div>
-              </div>
-              <div className="os-product-price">
-                <div className="os-product-price-val">{fmt(p.price)}</div>
-                <div className="os-product-price-sub">
-                  ${p.perVin.toFixed(2)} / VIN
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Summary */}
-        <div className="os-section">
-          <div className="os-summary">
-            <div className="os-summary-header">
-              <div className="os-summary-title">Cost Breakdown</div>
-              <div className="os-summary-plan">
-                Studio {plan === "lite" ? "Lite" : "Pro"} · {vins} VINs
-              </div>
-            </div>
-
-            <div className="os-summary-body">
-              {/* Base */}
-              <div className="os-summary-row">
-                <div className="os-summary-row-name">
-                  <div className="os-summary-dot" style={{ background: "#185FA5" }} />
-                  Base Plan
-                </div>
-                <div className="os-summary-row-price">{fmt(breakdown.base)}</div>
-              </div>
-
-              {/* Active add-ons */}
-              {breakdown.items.filter((i) => i.on).length === 0 && (
-                <div className="os-summary-row">
-                  <div className="os-summary-row-name" style={{ color: "#9ca3af", fontStyle: "italic" }}>
-                    No add-ons selected — toggle products above to include them.
+                <div>
+                  <div className="os-base-name">
+                    Base Plan
+                    <span className="os-base-tag">
+                      <i className="ti ti-check" style={{ fontSize: 10 }} />
+                      Always included
+                    </span>
                   </div>
-                  <div className="os-summary-row-price" style={{ color: "#d1d5db" }}>—</div>
+                  <div className="os-base-desc">
+                    Core platform access · AI processing · Analytics dashboard ·{" "}
+                    {plan === "pro" ? "Dedicated account manager" : "Email support"}
+                  </div>
                 </div>
-              )}
-              {breakdown.items
-                .filter((i) => i.on)
-                .map((i) => (
-                  <div key={i.id} className="os-summary-row">
-                    <div className="os-summary-row-name">
-                      <div className="os-summary-dot" style={{ background: i.color }} />
-                      {i.name}
+                <div className="os-base-price">
+                  <div className="os-base-price-val">{fmt(breakdown.base)}</div>
+                  <div className="os-base-price-sub">
+                    ${breakdown.basePerVin.toFixed(2)} / VIN
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Product cards */}
+            <div>
+              <div className="os-section-label">Add-on products — toggle to include</div>
+              <div className="os-products">
+                {breakdown.items.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`os-product-card${p.on ? " enabled" : ""}`}
+                    onClick={() => toggleProduct(p.id)}
+                  >
+                    <div className="os-product-top">
+                      <div
+                        className="os-product-icon"
+                        style={{ background: p.color + "18", color: p.color }}
+                      >
+                        <i className={`ti ${p.icon}`} />
+                      </div>
+                      <div className={`os-toggle${p.on ? " on" : ""}`}>
+                        <div className="os-toggle-track" />
+                        <div className="os-toggle-thumb" />
+                      </div>
                     </div>
-                    <div className="os-summary-row-price">{fmt(i.price)}</div>
+                    <div>
+                      <div className="os-product-name">{p.name}</div>
+                      <div className="os-product-desc">{p.tagline}</div>
+                    </div>
+                    <div className="os-product-price">
+                      <div className="os-product-price-val">{fmt(p.price)}</div>
+                      <div className="os-product-price-sub">
+                        ${p.perVin.toFixed(2)} / VIN
+                      </div>
+                    </div>
                   </div>
                 ))}
+              </div>
             </div>
+          </div>
 
-            <div className="os-summary-footer">
-              <div className="os-stat">
-                <div className="os-stat-label">Monthly Total</div>
-                <div className="os-stat-value">{fmt(breakdown.total)}</div>
-                <div className="os-stat-sub">per rooftop / month</div>
+          {/* ── RIGHT: cost breakdown ── */}
+          <div className="os-right">
+            <div className="os-summary">
+              <div className="os-summary-header">
+                <div className="os-summary-title">Cost Breakdown</div>
+                <div className="os-summary-plan">
+                  Studio {plan === "lite" ? "Lite" : "Pro"} · {vins} VINs
+                </div>
               </div>
-              <div className="os-stat">
-                <div className="os-stat-label">Annual Commitment</div>
-                <div className="os-stat-value">{fmt(breakdown.total * 12)}</div>
-                <div className="os-stat-sub">per rooftop / year</div>
+
+              <div className="os-summary-body">
+                <div className="os-summary-row">
+                  <div className="os-summary-row-name">
+                    <div className="os-summary-dot" style={{ background: "#185FA5" }} />
+                    Base Plan
+                  </div>
+                  <div className="os-summary-row-price">{fmt(breakdown.base)}</div>
+                </div>
+
+                {breakdown.items.filter((i) => i.on).length === 0 && (
+                  <div className="os-summary-row">
+                    <div className="os-summary-row-name" style={{ color: "#9ca3af", fontStyle: "italic" }}>
+                      Toggle products on the left to add them.
+                    </div>
+                    <div className="os-summary-row-price" style={{ color: "#d1d5db" }}>—</div>
+                  </div>
+                )}
+                {breakdown.items
+                  .filter((i) => i.on)
+                  .map((i) => (
+                    <div key={i.id} className="os-summary-row">
+                      <div className="os-summary-row-name">
+                        <div className="os-summary-dot" style={{ background: i.color }} />
+                        {i.name}
+                      </div>
+                      <div className="os-summary-row-price">{fmt(i.price)}</div>
+                    </div>
+                  ))}
               </div>
-              <div className="os-stat highlight">
-                <div className="os-stat-label">Blended Rate</div>
-                <div className="os-stat-value">${breakdown.blended.toFixed(2)}</div>
-                <div className="os-stat-sub">per VIN / month</div>
+
+              <div className="os-summary-footer">
+                <div className="os-stat">
+                  <div className="os-stat-label">Monthly Total</div>
+                  <div className="os-stat-value">{fmt(breakdown.total)}</div>
+                  <div className="os-stat-sub">per rooftop / month</div>
+                </div>
+                <div className="os-stat">
+                  <div className="os-stat-label">Annual</div>
+                  <div className="os-stat-value">{fmt(breakdown.total * 12)}</div>
+                  <div className="os-stat-sub">per rooftop / year</div>
+                </div>
+                <div className="os-stat">
+                  <div className="os-stat-label">Per VIN</div>
+                  <div className="os-stat-value">${breakdown.blended.toFixed(2)}</div>
+                  <div className="os-stat-sub">blended / month</div>
+                </div>
               </div>
             </div>
           </div>
