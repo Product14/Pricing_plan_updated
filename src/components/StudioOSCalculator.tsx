@@ -107,9 +107,7 @@ export default function StudioOSCalculator() {
     const basePerVin = PER_VIN.base[plan][vins];
 
     const items = PRODUCTS.map((p) => {
-      const price = PRICING[p.id][plan as keyof (typeof PRICING)[typeof p.id]] !== undefined
-        ? (PRICING[p.id] as Record<Plan, Record<VinTier, number>>)[plan][vins]
-        : (PRICING[p.id] as Record<VinTier, number>)[vins];
+      const price = (PRICING[p.id] as Record<Plan, Record<VinTier, number>>)[plan][vins];
       const perVin = (PER_VIN[p.id] as Record<VinTier, number>)[vins];
       const on = enabled.has(p.id);
       return { ...p, price, perVin, on };
