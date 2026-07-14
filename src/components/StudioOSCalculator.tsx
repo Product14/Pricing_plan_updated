@@ -18,16 +18,16 @@ const PRICING = {
     pro:  { 50: 298,  100: 598,  200: 748,  300: 748,  400: 748  },
   },
   create: {
-    lite: { 50: 149,  100: 249,  200: 399,  300: 499,  400: 549  },
-    pro:  { 50: 199,  100: 349,  200: 549,  300: 699,  400: 749  },
+    lite: { 50: 199,  100: 349,  200: 599,  300: 749,  400: 799  },
+    pro:  { 50: 499,  100: 849,  200: 1499, 300: 1899, 400: 1999 },
   },
   publish: {
     lite: { 50: 99,   100: 179,  200: 299,  300: 399,  400: 449  },
     pro:  { 50: 149,  100: 249,  200: 399,  300: 499,  400: 549  },
   },
   frame: {
-    lite: { 50: 99,   100: 179,  200: 299,  300: 399,  400: 449  },
-    pro:  { 50: 149,  100: 249,  200: 399,  300: 499,  400: 549  },
+    lite: { 50: 0,    100: 0,    200: 0,    300: 0,    400: 0    },
+    pro:  { 50: 0,    100: 0,    200: 0,    300: 0,    400: 0    },
   },
   promote: {
     lite: { 50: 374,  100: 524,  200: 749,  300: 974,  400: 1199 },
@@ -41,9 +41,12 @@ const PER_VIN = {
     pro:  { 50: 9.98, 100: 8.49, 200: 7.50, 300: 6.33, 400: 5.00 },
   },
   instant: { 50: 5.94, 100: 5.98, 200: 3.76, 300: 2.50, 400: 1.86 },
-  create:  { 50: 2.98, 100: 2.49, 200: 2.00, 300: 1.66, 400: 1.37 },
+  create: {
+    lite: { 50: 3.98, 100: 3.49, 200: 3.00, 300: 2.50, 400: 2.00 },
+    pro:  { 50: 9.98, 100: 8.49, 200: 7.50, 300: 6.33, 400: 5.00 },
+  },
   publish: { 50: 1.98, 100: 1.79, 200: 1.50, 300: 1.33, 400: 1.12 },
-  frame:   { 50: 1.98, 100: 1.79, 200: 1.50, 300: 1.33, 400: 1.12 },
+  frame:   { 50: 0,    100: 0,    200: 0,    300: 0,    400: 0    },
   promote: { 50: 7.47, 100: 5.24, 200: 3.75, 300: 3.24, 400: 3.00 },
 } as const;
 
@@ -108,7 +111,10 @@ export default function StudioOSCalculator() {
 
     const items = PRODUCTS.map((p) => {
       const price = (PRICING[p.id] as Record<Plan, Record<VinTier, number>>)[plan][vins];
-      const perVin = (PER_VIN[p.id] as Record<VinTier, number>)[vins];
+      const pvEntry = PER_VIN[p.id] as Record<Plan, Record<VinTier, number>> | Record<VinTier, number>;
+      const perVin = (50 in pvEntry)
+        ? (pvEntry as Record<VinTier, number>)[vins]
+        : (pvEntry as Record<Plan, Record<VinTier, number>>)[plan][vins];
       const on = enabled.has(p.id);
       return { ...p, price, perVin, on };
     });
