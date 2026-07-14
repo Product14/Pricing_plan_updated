@@ -587,35 +587,6 @@ export default function StudioOSCalculator() {
         <div className="os-body">
           {/* ── LEFT: products ── */}
           <div className="os-left">
-            {/* Base Plan */}
-            <div>
-              <div className="os-section-label">Base Plan — always included</div>
-              <div className="os-base-card">
-                <div className="os-base-icon">
-                  <i className="ti ti-layout-grid" />
-                </div>
-                <div>
-                  <div className="os-base-name">
-                    Base Plan
-                    <span className="os-base-tag">
-                      <i className="ti ti-check" style={{ fontSize: 10 }} />
-                      Always included
-                    </span>
-                  </div>
-                  <div className="os-base-desc">
-                    Core platform access · AI processing · Analytics dashboard ·{" "}
-                    {plan === "pro" ? "Dedicated account manager" : "Email support"}
-                  </div>
-                </div>
-                <div className="os-base-price">
-                  <div className="os-base-price-val">{fmt(breakdown.base)}</div>
-                  <div className="os-base-price-sub">
-                    ${breakdown.basePerVin.toFixed(2)} / VIN
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Product cards */}
             <div>
               <div className="os-section-label">Add-on products — toggle to include</div>
