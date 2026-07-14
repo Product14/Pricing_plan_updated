@@ -57,7 +57,7 @@ type ProductId = (typeof PRODUCTS)[number]["id"];
 export default function StudioOSCalculator() {
   const [plan, setPlan] = useState<Plan>("lite");
   const [vins, setVins] = useState<VinTier>(50);
-  const [enabled, setEnabled] = useState<Set<ProductId>>(new Set());
+  const [enabled, setEnabled] = useState<Set<ProductId>>(new Set(["create"] as ProductId[]));
   const [expanded, setExpanded] = useState<Set<ProductId>>(new Set());
 
   const toggleProduct = (id: ProductId) => {
