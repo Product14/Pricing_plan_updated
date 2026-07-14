@@ -144,7 +144,7 @@ export default function StudioOSCalculator() {
         /* ── Two-column body ── */
         .os-body {
           max-width: 1200px; margin: 0 auto;
-          display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start;
+          display: grid; grid-template-columns: 60% 40%; gap: 20px; align-items: start;
         }
         @media (max-width: 700px) { .os-body { grid-template-columns: 1fr; } }
 
